@@ -31,6 +31,6 @@ namespace GeneralStore.MVC.Models
 
         [Required]
         [Display(Name = "Date of Transaction")]
-        public DateTime DateOfTransaction { get; set; }
+        public DateTime DateOfTransaction { get; } = DateTime.UtcNow;
     }
 }

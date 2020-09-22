@@ -12,117 +12,111 @@ namespace GeneralStore.MVC.Controllers
 {
     public class TransactionController : Controller
     {
-        private ApplicationDbContext _db = new ApplicationDbContext();
-
-        // GET: Transaction
-        public ActionResult Index()
-        {
-            return View(_db.Transactions.ToList());
-        }
-
-        // GET: Transaction/Create
-        public ActionResult Create()
-        {
-            ViewBag.CustomerID = new SelectList(_db.Customers, "CustomerId", "FullName");
-            ViewBag.ProductID = new SelectList(_db.Products, "ProductId", "Name");
-            return View();
-        }
-
-        // POST: Transaction/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(Transaction transaction)
-        {
-            if (ModelState.IsValid)
+            private ApplicationDbContext _db = new ApplicationDbContext();
+            // GET: Transaction
+            public ActionResult Index()
             {
-                var product = _db.Products.Find(transaction.ProductId);
-                if (product.InventoryCount < 1)
+                List<Transaction> transactionList = _db.Transactions.ToList();
+                List<Transaction> orderedTransactions = transactionList.OrderBy(tran => tran.DateOfTransaction).ToList();
+                return View(orderedTransactions);
+            }
+
+            public ActionResult Create()
+            {
+                var customers = new SelectList(_db.Customers.ToList(), "CustomerId", "FullName");
+                ViewBag.Customers = customers;
+                var products = new SelectList(_db.Products.ToList(), "ProductId", "Name");
+                ViewBag.Products = products;
+                return View();
+            }
+
+            [HttpPost]
+            public ActionResult Create(Transaction transaction)
+            {
+                if (ModelState.IsValid)
                 {
-                    return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                    Customer customer = _db.Customers.Find(transaction.CustomerId);
+                    if (customer == null) return HttpNotFound("Customer not found");
+                    Product product = _db.Products.Find(transaction.ProductId);
+                    if (product == null) return HttpNotFound("Product not found");
+                    if (transaction.ItemCount > product.InventoryCount) return HttpNotFound("There isn't enough product for this purchase");
+
+                    _db.Transactions.Add(transaction);
+                    product.InventoryCount -= transaction.ItemCount;
+                    _db.SaveChanges();
+                    return RedirectToAction("Index");
+
+
                 }
+                return View(transaction);
+            }
 
-                product.InventoryCount--;
+            // GET: Delete
+            public ActionResult Delete(int? id)
+            {
+                if (id == null) return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+                Transaction transaction = _db.Transactions.Find(id);
+                if (transaction == null) return HttpNotFound();
+                return View(transaction);
+            }
 
-                _db.Transactions.Add(transaction);
+            [HttpPost, ActionName("Delete")]
+            [ValidateAntiForgeryToken]
+            public ActionResult Delete(int id)
+            {
+                Transaction transaction = _db.Transactions.Find(id);
+                Product product = _db.Products.Find(transaction.ProductId);
+                product.InventoryCount += transaction.ItemCount;
+                _db.Transactions.Remove(transaction);
                 _db.SaveChanges();
                 return RedirectToAction("Index");
             }
 
-            ViewBag.CustomerId = new SelectList(_db.Customers, "CustomerId", "FullName", transaction.CustomerId);
-            ViewBag.ProductId = new SelectList(_db.Products, "ProductId", "Name", transaction.ProductId);
-
-            return View(transaction);
-        }
-
-        // GET: Transaction/Delete{id}
-        public ActionResult Delete(int? id) //int? means it is a boxed integer value; it is nullable
-        {
-            if (id == null)
+            //GET: Transaction/Edit{id}
+            public ActionResult Edit(int? id)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                if (id == null) return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+                Transaction transaction = _db.Transactions.Find(id);
+                if (transaction == null) return HttpNotFound();
+                var customers = new SelectList(_db.Customers.ToList(), "CustomerId", "FullName");
+                ViewBag.Customers = customers;
+                var products = new SelectList(_db.Products.ToList(), "ProductId", "Name");
+                ViewBag.Products = products;
+                return View(transaction);
             }
-            Transaction transaction = _db.Transactions.Find(id);
-            if (transaction == null)
-            {
-                return HttpNotFound();
-            }
-            return View(transaction);
-        }
 
-        // POST: Transaction/Delete/{id}
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id) // Create Delete Method that takes in an ID
-        {
-            Transaction transaction = _db.Transactions.Find(id); // Create an instance of Product and set it = to the database of Products and find it by the ID
-            _db.Transactions.Remove(transaction); // Go to database Products and remove that instance of the Product (product)
-            _db.SaveChanges(); // Save Changes to database
-            return RedirectToAction("Index"); // After complete, redirect back to Index page
-        }
+        
+            // POST: Transaction/Edit{id}
+            [HttpPost, ActionName("Edit")]
+            [ValidateAntiForgeryToken]
+            public ActionResult Edit(Transaction transaction)
+            {
+                if (ModelState.IsValid)
+                {
+                    var oldTransaction = _db.Transactions.AsNoTracking().Where(P => P.TransactionId == transaction.TransactionId).FirstOrDefault();
+                    //int oldTransaction = _db.Transactions.Find(transaction.TransactionId).ItemCount;
+                    Product product = _db.Products.Find(transaction.ProductId);
+                    product.InventoryCount += oldTransaction.ItemCount;
+                    _db.Entry(transaction).State = System.Data.Entity.EntityState.Modified;
+                    product.InventoryCount -= transaction.ItemCount;
+                    if (product.InventoryCount < 0) return HttpNotFound("There isn't enough product for this purchase");
+                    _db.SaveChanges();
+                    return RedirectToAction("Index");
+                }
+                return View(transaction);
+            }
 
-        // GET: Transaction/Edit/{id}
-        public ActionResult Edit(int? id)
-        {
-            if (id == null)
+            // GET: Details
+            // Transaction/Details/{id}
+            public ActionResult Details(int? id)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            Transaction transaction = _db.Transactions.Find(id);
-            if (transaction == null)
-            {
-                return HttpNotFound();
-            }
-            return View(transaction);
-        }
+                if (id == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
 
-        // POST: Transaction/Edit/{id}
-        [HttpPost, ActionName("Edit")]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(Transaction transaction)
-        {
-            if (ModelState.IsValid)
-            {
-                _db.Entry(transaction).State = EntityState.Modified;
-                _db.SaveChanges();
-                return RedirectToAction("Index");
-            }
-            return View(transaction);
-        }
+                Transaction transaction = _db.Transactions.Find(id);
 
-        // GET: Product/Details{id}
-        public ActionResult Details(int? id)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            Transaction transaction = _db.Transactions.Find(id);
-            if (transaction == null)
-            {
-                return HttpNotFound();
-            }
-            return View(transaction);
-        }
+                if (transaction == null) return HttpNotFound();
 
+                return View(transaction);
+            }
     }
 }

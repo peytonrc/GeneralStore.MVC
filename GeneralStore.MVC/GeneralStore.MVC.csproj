@@ -191,6 +191,10 @@
     <Compile Include="Migrations\202009221740194_TransactionDb.Designer.cs">
       <DependentUpon>202009221740194_TransactionDb.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202009222043072_TransactionBd.cs" />
+    <Compile Include="Migrations\202009222043072_TransactionBd.Designer.cs">
+      <DependentUpon>202009222043072_TransactionBd.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\Customer.cs" />
@@ -298,6 +302,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202009221740194_TransactionDb.resx">
       <DependentUpon>202009221740194_TransactionDb.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202009222043072_TransactionBd.resx">
+      <DependentUpon>202009222043072_TransactionBd.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
