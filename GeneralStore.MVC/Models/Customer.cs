@@ -19,8 +19,15 @@ namespace GeneralStore.MVC.Models
         [Display(Name = "Last Name")]
         public string LastName { get; set; }
 
-        [Display(Name ="Full Name")]
-        public string FullName { get; } // Add logic
+        [Required]
+        [Display(Name = "Full Name")]
+        public string FullName
+        {
+            get
+            {
+                return $"{FirstName} {LastName}";
+            }
+        }
 
     }
 }
