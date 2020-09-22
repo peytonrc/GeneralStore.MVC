@@ -1,0 +1,53 @@
+﻿
+@model IEnumerable<GeneralStore.MVC.Models.Product>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+
+<table class="table">
+    <!--Added a single table and a single row with multiple table headers; inside the headers we call DisplayNameFor Method and pass in property from Restaurant Model-->
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Name)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.InventoryCount)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Price)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.IsFood)
+        </th>
+    </tr>
+    @foreach (GeneralStore.MVC.Models.Product item in Model) //item is the name of our Restaurant in each iteration
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.InventoryCount)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Price)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsFood)
+            </td>
+            <td>
+                @Html.ActionLink("Edit", "Edit", new { id = item.ProductId })
+                @Html.ActionLink("Details", "Details", new { id = item.ProductId })
+                @Html.ActionLink("Delete", "Delete", new { id = item.ProductId })
+
+            </td>
+        </tr>
+    }
+</table>
