@@ -10,6 +10,7 @@ namespace GeneralStore.MVC.Models
     public class Product
     {
         [Key]
+        [Display(Name = "Product ID")]
         public int ProductId { get; set; }
 
         [Required]
